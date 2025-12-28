@@ -12,7 +12,19 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "mongodb": "^6.20.0"
+    "express": "^5.2.1",
+    "mongodb": "^6.21.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itsSopno/Server-1.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/itsSopno/Server-1/issues"
+  },
+  "homepage": "https://github.com/itsSopno/Server-1#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.11"
   }
 }

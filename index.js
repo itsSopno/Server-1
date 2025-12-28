@@ -4,7 +4,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config(); 
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -27,6 +27,7 @@ async function run() {
 
     const usersCollection = client.db("test").collection("users");
     const buyerCollection = client.db("test").collection("buyerdata");
+    const projectCollection = client.db("test").collection("project");
 
     // ------------------ Routes ------------------
 
@@ -47,6 +48,27 @@ async function run() {
         res.status(500).send({ error: "Failed to fetch users" });
       }
     });
+app.get('/project', async (req, res) => {
+  try {
+    const projects = await projectCollection.find().toArray();
+    res.json(projects);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch project data' });
+  }
+});
+
+// GET single project by ID
+app.get('/project/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const project = await projectCollection.findOne({ _id: new ObjectId(id) });
+    res.json(project);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch project data' });
+  }
+});
 
     // --- Add new model ---
     app.post('/users', async (req, res) => {
