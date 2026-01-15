@@ -30,12 +30,94 @@ async function run() {
     const usersCollection = db.collection("users");
     const buyerCollection = db.collection("buyerdata");
     const projectCollection = db.collection("project");
+    const itemsCollection = db.collection("items");
+
 
     // --- Routes ---
 
     app.get('/', (req, res) => {
       res.send('AI Verse Backend is Running 🚀');
     });
+// GET all items
+app.get('/items', async (req, res) => {
+  try {
+    const items = await itemsCollection.find().toArray();
+    res.status(200).json(items);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch items' });
+  }
+});
+// GET single item
+app.get('/items/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid item ID' });
+    }
+
+    const item = await itemsCollection.findOne({ _id: new ObjectId(id) });
+
+    if (!item) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    res.status(200).json(item);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch item' });
+  }
+});
+// POST add new item
+app.post("/items", async (req, res) => {
+  const items = req.body; // তোমার array of objects
+
+  try {
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ error: "Expected an array of items" });
+    }
+
+    const result = await itemsCollection.insertMany(items);
+
+    res.status(201).json({
+      message: "Items created successfully",
+      insertedCount: result.insertedCount,
+      insertedIds: result.insertedIds,
+    });
+  } catch (err) {
+    console.error("Insert Error:", err);
+    res.status(500).json({ error: "Failed to save items" });
+  }
+});
+
+
+// PUT update item
+app.put('/items/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid item ID' });
+    }
+
+    const updatedData = req.body;
+
+    const result = await itemsCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updatedData }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    res.status(200).json({
+      message: 'Item updated successfully',
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update item' });
+  }
+});
 
     // Projects GET
     app.get('/project', async (req, res) => {
@@ -46,7 +128,58 @@ async function run() {
         res.status(500).json({ error: 'Failed to fetch project data' });
       }
     });
+   app.patch('/project/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const updateDoc = req.body; 
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid Project ID format' });
+    }
 
+    const filter = { _id: new ObjectId(id) };
+    
+    const result = await projectCollection.updateOne(
+      filter, 
+      { $set: updateDoc }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'No project found with this ID' });
+    }
+
+    res.status(200).json({
+      message: 'Update successful',
+      modifiedCount: result.modifiedCount
+    });
+
+  } catch (err) {
+    console.error('Update Error:', err);
+    res.status(500).json({ error: 'Internal server error during update' });
+  }
+});
+// Projects POST
+app.post('/project', async (req, res) => {
+  try {
+    const newProject = req.body; 
+
+  
+    if (!newProject.title || !newProject.year) {
+      return res.status(400).json({ error: 'Title and Year are required' });
+    }
+
+    const result = await projectCollection.insertOne(newProject);
+    
+    // সফলভাবে সেভ হলে রেসপন্স পাঠান
+    res.status(201).json({
+      message: 'Project created successfully',
+      insertedId: result.insertedId,
+      project: newProject
+    });
+  } catch (err) {
+    console.error('Error inserting project:', err);
+    res.status(500).json({ error: 'Failed to save project data' });
+  }
+});
     // Single Project GET
     app.get('/project/:id', async (req, res) => {
       try {
