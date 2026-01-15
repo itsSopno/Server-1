@@ -162,14 +162,9 @@ app.post('/project', async (req, res) => {
   try {
     const newProject = req.body; 
 
-  
-    if (!newProject.title || !newProject.year) {
-      return res.status(400).json({ error: 'Title and Year are required' });
-    }
-
+    // এখানে কোনো কন্ডিশন বা চেক নেই, সরাসরি ডাটাবেসে ইনসার্ট হবে
     const result = await projectCollection.insertOne(newProject);
     
-    // সফলভাবে সেভ হলে রেসপন্স পাঠান
     res.status(201).json({
       message: 'Project created successfully',
       insertedId: result.insertedId,
