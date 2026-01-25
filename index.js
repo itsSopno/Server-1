@@ -31,14 +31,38 @@ async function run() {
     const buyerCollection = db.collection("buyerdata");
     const projectCollection = db.collection("project");
     const itemsCollection = db.collection("items");
-
+const userCollection = db.collection("user");
 
     // --- Routes ---
 
     app.get('/', (req, res) => {
       res.send('AI Verse Backend is Running 🚀');
     });
-// GET all items
+// GET all 
+app.get("/user",async(req , res) =>{
+  try{
+    const users = await userCollection.find().toArray();
+    res.status(200).json(users);
+  }catch(error){
+    res.status(500).json({ error: 'Failed to fetch users' }); 
+  }
+})
+app.get('/users', async (req, res) => {
+  try{
+    const users = await usersCollection.find().toArray();
+    res.status(200).json(users);
+  }catch(error){
+    res.status(500).json({ error: 'Failed to fetch users' }); 
+  }
+})
+app.get('/buyerdata', async (req, res) => {
+  try {
+    const buyers = await buyerCollection.find().toArray();
+    res.status(200).json(buyers);
+  }catch(error){
+    res.status(500).json({ error: 'Failed to fetch buyers' });
+  }
+})
 app.get('/items', async (req, res) => {
   try {
     const items = await itemsCollection.find().toArray();
@@ -68,6 +92,15 @@ app.get('/items/:id', async (req, res) => {
   }
 });
 // POST add new item
+app.post("/user",async(req , res)=>{
+  const user = req.body;
+  try{
+    const result = await userCollection.insertOne(user);
+    res.status(201).json({message:"User added successfully", insertedId: result.insertedId});
+  }catch(error){
+    res.status(500).json({error:"Failed to add user"});
+  }
+})
 app.post("/items", async (req, res) => {
   const items = req.body; // তোমার array of objects
 
@@ -128,6 +161,25 @@ app.put('/items/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch project data' });
       }
     });
+    // Import ObjectId at the top of your file if you haven't already
+// const { ObjectId } = require('mongodb');
+
+app.delete('/project/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    
+    const result = await projectCollection.deleteOne(query);
+
+    if (result.deletedCount === 1) {
+      res.status(200).json({ message: 'Project successfully deleted' });
+    } else {
+      res.status(404).json({ error: 'No project found with this ID' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete the project' });
+  }
+});
    app.patch('/project/:id', async (req, res) => {
   try {
     const id = req.params.id;
