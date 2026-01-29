@@ -5,7 +5,7 @@ require('dotenv').config();
 
 const app = express();
 // Render-এর জন্য পোর্ট প্রসেস এনভায়রনমেন্ট থেকে নেওয়া জরুরি
-const port = process.env.PORT || 10000; 
+const port = process.env.PORT || 10000;
 
 // Middleware
 app.use(cors());
@@ -27,18 +27,44 @@ async function run() {
     console.log("✅ Connected to MongoDB!");
 
     const db = client.db("test");
+    
+    // Collections
+    const menCollection = db.collection("men");
+    const womenCollection = db.collection("women");
+    const nezinUserCollection = db.collection("Customer");
+    const customerCollection = db.collection("CusData");
     const usersCollection = db.collection("users");
     const buyerCollection = db.collection("buyerdata");
     const projectCollection = db.collection("project");
     const itemsCollection = db.collection("items");
-const userCollection = db.collection("user");
+    const userCollection = db.collection("user");
+
 
     // --- Routes ---
 
     app.get('/', (req, res) => {
       res.send('AI Verse Backend is Running 🚀');
     });
-// GET all 
+// GET all customers (Nezim)
+app.get("/Customer", async(req , res) =>{
+  try{
+    const customers = await nezinUserCollection.find().toArray();
+    res.status(200).json(customers);
+  }catch(error){
+    res.status(500).json({error : 'Failed to fetch customers'});
+  }
+})
+app.post("/Customer" ,async(req , res) =>{
+  const customer = req.body;
+  try{
+    const result = await nezinUserCollection.insertOne(customer);
+    res.status(201).json({massage :"user added succesfully",})
+
+  }catch(error){
+    res.status(500).json({error :"failed to add "})
+  }
+})
+
 app.get("/user",async(req , res) =>{
   try{
     const users = await userCollection.find().toArray();
@@ -151,8 +177,27 @@ app.put('/items/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to update item' });
   }
 });
+app.put('/project/:id',async(req, res)=>{
+  try{
+    const {id} = req.params;
+    if(!ObjectId.isValid(id))
+{
+  return res.status(400).json({error:"Invalid project ID"});
+}
+const updatedData = req.body;
+const result = await projectCollection.updateOne(
+  {_id: new ObjectId(id)},
+  {$set: updatedData}
+);
+if(result.matchedCount ===0){
+  return res.status(404).json({error:"Project not found"});
+}res.status(200).json({  message:"Project updated successfully",
+  modifiedCount: result.modifiedCount})
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update project' });
+  }
 
-    // Projects GET
+})    // Projects GET
     app.get('/project', async (req, res) => {
       try {
         const projects = await projectCollection.find().toArray();
