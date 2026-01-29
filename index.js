@@ -54,17 +54,46 @@ app.get("/Customer", async(req , res) =>{
     res.status(500).json({error : 'Failed to fetch customers'});
   }
 })
-app.post("/Customer" ,async(req , res) =>{
+app.post("/Customer", async (req, res) => {
   const customer = req.body;
-  try{
+  
+  // Email check korar jonno query
+  const query = { email: customer.email };
+
+  try {
+    // 1. Prothome check korbo ei email diye keu ache kina
+    const existingUser = await nezinUserCollection.findOne(query);
+
+    if (existingUser) {
+      // User thakle amra insert korbo na, shudhu message pathabo
+      return res.status(200).json({ message: "User already exists", insertedId: null });
+    }
+
+    // 2. User na thakle notun kore insert korbo
     const result = await nezinUserCollection.insertOne(customer);
-    res.status(201).json({massage :"user added succesfully",})
+    res.status(201).json({ message: "User added successfully", result });
 
-  }catch(error){
-    res.status(500).json({error :"failed to add "})
+  } catch (error) {
+    console.error("Error adding user:", error);
+    res.status(500).json({ error: "Failed to add user" });
   }
-})
+});
+app.delete('/Customer/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    
+    const result = await nezinUserCollection.deleteOne(query);
 
+    if (result.deletedCount === 1) {
+      res.status(200).json({ message: 'customer successfully deleted' });
+    } else {
+      res.status(404).json({ error: 'No project found with this ID' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete the project' });
+  }
+});
 app.get("/user",async(req , res) =>{
   try{
     const users = await userCollection.find().toArray();
