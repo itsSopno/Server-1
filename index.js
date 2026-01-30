@@ -113,6 +113,26 @@ app.delete('/Customer/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete the project' });
   }
 });
+
+app.post("/CusData" , async (req, res) =>{
+  const data = req.body;
+  try{
+    const result = await customerCollection.insertOne(data);
+    res.status(201).json({
+      masssage : "Data uploaded",insterdID : result.insertedId
+    })
+  }catch(error){
+    res.status(500).json({error : "you have problem"});
+  }
+})
+app.get("/CusData", async(req, res) => {
+  try{
+    const result = await customerCollection.find().toArray();
+    res.status(200)/json(result);
+  }catch(error){
+    res.status(500).json({error : "Failed to fetch data"})
+  }
+});
 app.get("/user",async(req , res) =>{
   try{
     const users = await userCollection.find().toArray();
