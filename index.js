@@ -38,7 +38,7 @@ async function run() {
     const projectCollection = db.collection("project");
     const itemsCollection = db.collection("items");
     const userCollection = db.collection("user");
-
+const dataCollection = db.collection("payment")
 
     // --- Routes ---
 
@@ -96,6 +96,29 @@ app.get("/men", async(req, res) => {
     res.status(500).json({error : 'Failed to fetch men outfits'});
   }
 })
+
+// Update a men outfit by id
+app.put('/men/:id', async (req, res) => {
+  const id = req.params.id;
+  const update = req.body;
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid id' });
+  }
+
+  try {
+    const filter = { _id: new ObjectId(id) };
+    const updateDoc = { $set: update };
+    const result = await menCollection.updateOne(filter, updateDoc);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Men outfit not found' });
+    }
+
+    res.status(200).json({ message: 'Men outfit updated', modifiedCount: result.modifiedCount });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update men outfit' });
+  }
+});
 
 app.delete('/Customer/:id', async (req, res) => {
   try {
@@ -195,6 +218,48 @@ app.post("/user",async(req , res)=>{
     res.status(500).json({error:"Failed to add user"});
   }
 })
+
+// Payment routes
+app.get('/payment', async (req, res) => {
+  try {
+    const payments = await dataCollection.find().toArray();
+    res.status(200).json(payments);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch payments' });
+  }
+});
+
+app.post('/payment', async (req, res) => {
+  const payment = req.body;
+  try {
+    const result = await dataCollection.insertOne(payment);
+    res.status(201).json({ message: 'Payment created', insertedId: result.insertedId });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create payment' });
+  }
+});
+
+app.put('/payment/:id', async (req, res) => {
+  const { id } = req.params;
+  const update = req.body;
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid id' });
+  }
+
+  try {
+    const filter = { _id: new ObjectId(id) };
+    const updateDoc = { $set: update };
+    const result = await dataCollection.updateOne(filter, updateDoc);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    res.status(200).json({ message: 'Payment updated', modifiedCount: result.modifiedCount });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update payment' });
+  }
+});
 app.post("/items", async (req, res) => {
   const items = req.body; // তোমার array of objects
 
