@@ -78,6 +78,17 @@ app.post("/Customer", async (req, res) => {
     res.status(500).json({ error: "Failed to add user" });
   }
 });
+app.post("/men" , async(req,res) => {
+  const men = req.body;
+  try{
+    const result = await menCollection.insertOne(men);
+    res.status(201).json({massage:"Men Outfit Collection"});
+  
+  }catch(error){
+    res.status(500).json({error :"Failde to post Outfit"})
+  }
+})
+
 app.delete('/Customer/:id', async (req, res) => {
   try {
     const id = req.params.id;
