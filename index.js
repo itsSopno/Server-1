@@ -88,6 +88,14 @@ app.post("/men" , async(req,res) => {
     res.status(500).json({error :"Failde to post Outfit"})
   }
 })
+app.get("/men", async(req, res) => {
+  try{
+    const men = await menCollection.find().toArray();
+    res.status(200).json(men);
+  }catch(error){
+    res.status(500).json({error : 'Failed to fetch men outfits'});
+  }
+})
 
 app.delete('/Customer/:id', async (req, res) => {
   try {
