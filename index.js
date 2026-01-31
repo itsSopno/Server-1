@@ -97,6 +97,52 @@ app.get("/men", async(req, res) => {
   }
 })
 
+// Add product to men outfit
+app.post('/men/:id/product', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const product = req.body;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
+
+    const filter = { _id: new ObjectId(id) };
+    const updateDoc = { $push: { products: product } };
+    const result = await menCollection.updateOne(filter, updateDoc);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Men outfit not found' });
+    }
+
+    res.status(201).json({ message: 'Product added successfully', modifiedCount: result.modifiedCount });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add product' });
+  }
+});
+
+// Get products for a specific men outfit
+app.get('/men/:id/product', async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
+
+    const filter = { _id: new ObjectId(id) };
+    const outfit = await menCollection.findOne(filter);
+
+    if (!outfit) {
+      return res.status(404).json({ error: 'Men outfit not found' });
+    }
+
+    res.status(200).json({ products: outfit.products || [] });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch products' });
+  }
+});
+
 // Update a men outfit by id
 app.put('/men/:id', async (req, res) => {
   const id = req.params.id;
