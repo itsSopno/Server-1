@@ -54,6 +54,7 @@ app.get("/Customer", async(req , res) =>{
     res.status(500).json({error : 'Failed to fetch customers'});
   }
 })
+
 app.post("/Customer", async (req, res) => {
   const customer = req.body;
   
@@ -78,6 +79,76 @@ app.post("/Customer", async (req, res) => {
     res.status(500).json({ error: "Failed to add user" });
   }
 });
+// for womenCollectio 
+app.post("/women" , async (req ,res) => {
+  const women = req.body;
+  try{
+    const result = await womenCollection.insertOne(women);
+    res.status(201).json({massage :"Women Outfit Collection"});
+
+  }catch(error){
+    res.status(500).json({error : "Failed to post data"})
+  }
+})
+app.get("/women" , async(req , res) => {
+  try{
+    const women = await womenCollection.find().toArray();
+    res.status(200).json(women);
+  }catch(error){
+    res.status(500).json({error : "Failed to fetch data"})
+  }
+})
+
+app.post("/women/:id/products", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const product = req.body;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid ID format" });
+    }
+
+    const filter = { _id: new ObjectId(id) };
+    const updateDoc = { $push: { products: product } };
+
+    // Use updateOne instead of insertOne
+    const result = await womenCollection.updateOne(filter, updateDoc);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Women category not found" });
+    }
+
+    res.status(201).json({ message: "Product added successfully", result });
+  } catch (error) {
+    console.error(error); // Log the error for debugging
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+app.delete("/women/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    // 1. Validate ID format first to prevent BSON errors
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid ID format" });
+    }
+
+    const query = { _id: new ObjectId(id) };
+    const result = await womenCollection.deleteOne(query);
+
+    // 2. Changed 'id' to 'if' and corrected 'massage' to 'message'
+    if (result.deletedCount === 1) {
+      res.status(200).json({ message: "Women Data deleted successfully" });
+    } else {
+      // 3. Changed 'erro' to 'error' and used 404 for 'Not Found'
+      res.status(404).json({ error: "No document found with this ID" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete data" });
+  }
+});
+// for menCollection
 app.post("/men" , async(req,res) => {
   const men = req.body;
   try{
