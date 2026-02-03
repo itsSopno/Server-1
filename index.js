@@ -39,7 +39,7 @@ async function run() {
     const itemsCollection = db.collection("items");
     const userCollection = db.collection("user");
 const dataCollection = db.collection("payment")
-
+const femaleCollection = db.collection("female-payment")
     // --- Routes ---
 
     app.get('/', (req, res) => {
@@ -337,6 +337,24 @@ app.post("/user",async(req , res)=>{
 })
 
 // Payment routes
+app.get('/female-payment', async (req, res) => {
+  try {
+    const payments = await femaleCollection.find().toArray();
+    res.status(200).json(payments);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch payments' });
+  }
+});
+app.post('/female-payment', async (req, res) => {
+  const payment = req.body;
+  try {
+    const result = await femaleCollection.insertOne(payment);
+    res.status(201).json({ message: 'Payment created', insertedId: result.insertedId });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create payment' });
+  }
+});
+
 app.get('/payment', async (req, res) => {
   try {
     const payments = await dataCollection.find().toArray();
