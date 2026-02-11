@@ -40,6 +40,7 @@ async function run() {
     const userCollection = db.collection("user");
 const dataCollection = db.collection("payment")
 const femaleCollection = db.collection("female-payment")
+const contactCollection = db.collection("Contact")
     // --- Routes ---
 
     app.get('/', (req, res) => {
@@ -124,6 +125,23 @@ app.post("/women/:id/products", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+app.post("/contact" , async (req , res ) => {
+  const data = req.body; 
+try{
+  const result = await contactCollection.insertOne(data);
+  res.status(201).json({massage: "contact data added "})
+}catch(error){
+  res.json({massage : "error"})
+}})
+
+app.get("/contact" , async (req , res ) => {
+  try{
+    const data = await contactCollection.find().toArray();
+    res.status(200).json(data);
+  }catch(error){
+    res.status(500).json({error : "Failed to load data "})
+  }
+})
 app.delete("/women/:id", async (req, res) => {
   try {
     const id = req.params.id;
