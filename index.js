@@ -29,17 +29,21 @@ async function run() {
     const db = client.db("test");
     
     // Collections
+    // FOR Nezin data 
     const menCollection = db.collection("men");
     const womenCollection = db.collection("women");
     const nezinUserCollection = db.collection("Customer");
     const customerCollection = db.collection("CusData");
+    const dataCollection = db.collection("payment")
+const femaleCollection = db.collection("female-payment")
+// Ai model data 
     const usersCollection = db.collection("users");
     const buyerCollection = db.collection("buyerdata");
-    const projectCollection = db.collection("project");
-    const itemsCollection = db.collection("items");
     const userCollection = db.collection("user");
-const dataCollection = db.collection("payment")
-const femaleCollection = db.collection("female-payment")
+// porfolio data 
+  const projectCollection = db.collection("project");
+  // for studio 
+      const itemsCollection = db.collection("items");
 const contactCollection = db.collection("Contact")
 const sinnersCollection = db.collection("sinner")
     // --- Routes ---
@@ -100,23 +104,7 @@ app.get("/women" , async(req , res) => {
     res.status(500).json({error : "Failed to fetch data"})
   }
 })
-app.post("/sinner", async(req , res ) =>{
-  const sinner = req.body;
-  try{
-    const result = await sinnersCollection.insertOne(sinner);
-    res.status(500).json({massage : "user added "})
-  }catch(error){
-    res.status(500).json({error : "Failed to post "})
-  }
-})
-app.get("/sinner" , async(req , res ) =>{
-  try{
-    const sinner = await sinnersCollection.find().toArray();
-    res.status(200).json(sinner)
-  }catch(error){
-    res.status(500).json({masssage : "failed found user "})
-  }
-})
+
 app.post("/women/:id/products", async (req, res) => {
   try {
     const id = req.params.id;
@@ -142,23 +130,6 @@ app.post("/women/:id/products", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-app.post("/contact" , async (req , res ) => {
-  const data = req.body; 
-try{
-  const result = await contactCollection.insertOne(data);
-  res.status(201).json({massage: "contact data added "})
-}catch(error){
-  res.json({massage : "error"})
-}})
-
-app.get("/contact" , async (req , res ) => {
-  try{
-    const data = await contactCollection.find().toArray();
-    res.status(200).json(data);
-  }catch(error){
-    res.status(500).json({error : "Failed to load data "})
-  }
-})
 app.delete("/women/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -316,51 +287,10 @@ app.get("/user",async(req , res) =>{
     res.status(500).json({ error: 'Failed to fetch users' }); 
   }
 })
-app.get('/users', async (req, res) => {
-  try{
-    const users = await usersCollection.find().toArray();
-    res.status(200).json(users);
-  }catch(error){
-    res.status(500).json({ error: 'Failed to fetch users' }); 
-  }
-})
-app.get('/buyerdata', async (req, res) => {
-  try {
-    const buyers = await buyerCollection.find().toArray();
-    res.status(200).json(buyers);
-  }catch(error){
-    res.status(500).json({ error: 'Failed to fetch buyers' });
-  }
-})
-app.get('/items', async (req, res) => {
-  try {
-    const items = await itemsCollection.find().toArray();
-    res.status(200).json(items);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch items' });
-  }
-});
-// GET single item
-app.get('/items/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
 
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'Invalid item ID' });
-    }
 
-    const item = await itemsCollection.findOne({ _id: new ObjectId(id) });
-
-    if (!item) {
-      return res.status(404).json({ error: 'Item not found' });
-    }
-
-    res.status(200).json(item);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch item' });
-  }
-});
 // POST add new item
+
 app.post("/user",async(req , res)=>{
   const user = req.body;
   try{
@@ -430,6 +360,96 @@ app.put('/payment/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to update payment' });
   }
 });
+// END OF NEZIN 
+
+
+// FOR STUDIO SINNERS 
+app.post("/sinner", async (req, res) => {
+  const { email, ...otherData } = req.body;
+
+  try {
+    
+    const existingUser = await sinnersCollection.findOne({ email: email });
+
+    if (existingUser) {
+      
+      return res.status(200).json({ 
+        message: "User already exists", 
+        role: existingUser.role || "user" 
+      });
+    }
+
+   
+    const result = await sinnersCollection.insertOne({ 
+      email, 
+      ...otherData, 
+      createdAt: new Date() 
+    });
+
+ 
+    res.status(201).json({ 
+      message: "User added successfully", 
+      role: "user" 
+    });
+
+  } catch (error) {
+    console.error("Database Error:", error);
+    res.status(500).json({ error: "Failed to post user data" });
+  }
+});
+app.get("/sinner" , async(req , res ) =>{
+  try{
+    const sinner = await sinnersCollection.find().toArray();
+    res.status(200).json(sinner)
+  }catch(error){
+    res.status(500).json({masssage : "failed found user "})
+  }
+})
+app.post("/contact" , async (req , res ) => {
+  const data = req.body; 
+try{
+  const result = await contactCollection.insertOne(data);
+  res.status(201).json({massage: "contact data added "})
+}catch(error){
+  res.json({massage : "error"})
+}})
+
+app.get("/contact" , async (req , res ) => {
+  try{
+    const data = await contactCollection.find().toArray();
+    res.status(200).json(data);
+  }catch(error){
+    res.status(500).json({error : "Failed to load data "})
+  }
+})
+app.get('/items', async (req, res) => {
+  try {
+    const items = await itemsCollection.find().toArray();
+    res.status(200).json(items);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch items' });
+  }
+});
+// GET single item
+app.get('/items/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid item ID' });
+    }
+
+    const item = await itemsCollection.findOne({ _id: new ObjectId(id) });
+
+    if (!item) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    res.status(200).json(item);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch item' });
+  }
+});
 app.post("/items", async (req, res) => {
   const items = req.body; // তোমার array of objects
 
@@ -480,6 +500,8 @@ app.put('/items/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to update item' });
   }
 });
+// END OF STUDIO 
+                           // FOR PORTFOLIO 
 app.put('/project/:id',async(req, res)=>{
   try{
     const {id} = req.params;
@@ -511,7 +533,6 @@ if(result.matchedCount ===0){
     });
     // Import ObjectId at the top of your file if you haven't already
 // const { ObjectId } = require('mongodb');
-
 app.delete('/project/:id', async (req, res) => {
   try {
     const id = req.params.id;
@@ -562,7 +583,6 @@ app.post('/project', async (req, res) => {
   try {
     const newProject = req.body; 
 
-    // এখানে কোনো কন্ডিশন বা চেক নেই, সরাসরি ডাটাবেসে ইনসার্ট হবে
     const result = await projectCollection.insertOne(newProject);
     
     res.status(201).json({
@@ -586,7 +606,8 @@ app.post('/project', async (req, res) => {
         res.status(500).json({ error: 'Server Error' });
       }
     });
-
+    // end of portfolio 
+                                      //  Ai model data 
     // Add Model POST
     app.post('/users', async (req, res) => {
       try {
@@ -597,8 +618,22 @@ app.post('/project', async (req, res) => {
         res.status(500).send({ error: "Failed to insert user" });
       }
     });
-
-    // Purchase Count Increment
+    app.get('/users', async (req, res) => {
+  try{
+    const users = await usersCollection.find().toArray();
+    res.status(200).json(users);
+  }catch(error){
+    res.status(500).json({ error: 'Failed to fetch users' }); 
+  }
+})
+app.get('/buyerdata', async (req, res) => {
+  try {
+    const buyers = await buyerCollection.find().toArray();
+    res.status(200).json(buyers);
+  }catch(error){
+    res.status(500).json({ error: 'Failed to fetch buyers' });
+  }
+})
     app.post('/users/:id/purchase', async (req, res) => {
       const { id } = req.params;
       try {
