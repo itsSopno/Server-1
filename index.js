@@ -41,6 +41,7 @@ async function run() {
 const dataCollection = db.collection("payment")
 const femaleCollection = db.collection("female-payment")
 const contactCollection = db.collection("Contact")
+const sinnersCollection = db.collection("sinner")
     // --- Routes ---
 
     app.get('/', (req, res) => {
@@ -99,7 +100,23 @@ app.get("/women" , async(req , res) => {
     res.status(500).json({error : "Failed to fetch data"})
   }
 })
-
+app.post("/sinner", async(req , res ) =>{
+  const sinner = req.body;
+  try{
+    const result = await sinnersCollection.insertOne(sinner);
+    res.status(500).json({massage : "user added "})
+  }catch(error){
+    res.status(500).json({error : "Failed to post "})
+  }
+})
+app.get("/sinner" , async(req , res ) =>{
+  try{
+    const sinner = await sinnersCollection.find().toArray();
+    res.status(200).json(sinner)
+  }catch(error){
+    res.status(500).json({masssage : "failed found user "})
+  }
+})
 app.post("/women/:id/products", async (req, res) => {
   try {
     const id = req.params.id;
