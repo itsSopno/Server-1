@@ -46,6 +46,12 @@ const femaleCollection = db.collection("female-payment")
       const itemsCollection = db.collection("items");
 const contactCollection = db.collection("Contact")
 const sinnersCollection = db.collection("sinner")
+const developerCollection = db.collection("developer")
+const clientCollection = db.collection("client")
+const allpostCollection = db.collection("allpost")
+const clientpostCollection =db.collection("clipost")
+const devprojectCollection = db.collection("dpost")
+
     // --- Routes ---
 
     app.get('/', (req, res) => {
@@ -364,6 +370,57 @@ app.put('/payment/:id', async (req, res) => {
 
 
 // FOR STUDIO SINNERS 
+app.post("/developer",async (req,res) =>{
+  const data = req.body;
+  try{
+    const result = await developerCollection.insertOne(data);
+    res.status(201).json({massage : "developer added "})
+  }catch(error){
+    res.json({massage :"Error"})
+  }
+})
+app.get("/developer" , async (req, res ) => {
+  try{
+    const result = await developerCollection.find().toArray();
+    res.status(200).json(data)
+  }catch(error){
+    res.status(500).json({error : "Failed to load data"})
+  }
+})
+app.post("/client" , async (req , res ) =>{
+  const result = req.body;
+  try{
+    const data = await clientCollection.insertOne(result);
+    res.status(201).json({massage :"data added"})
+  }catch(error){
+    res.status(500).json({massage :"error"})
+  }
+})
+app.get("/client",async (req , res ) => {
+  try{
+    const data = await clientCollection.find().toArray();
+    res.status(200).json(data)
+  }catch(error){
+    res.status(500).json({massasge :" Failed to load data "})
+  }
+})
+app.post("/allpost" , async(req , res ) => {
+  const data = req.body;
+  try{
+    const result  = await allpostCollection.insertOne(data);
+    res.status(201).json({massage :"all post added"})
+  }catch(error){
+    res.status(500).json({masssage :"Failed to add post "})
+  }
+})
+app.get("/allpost" , async (req , res ) => {
+  try{
+    const result = await allpostCollection.find().toArray();
+    res.status(200).json({massage : "post founded"})
+  }catch(error){
+    res.status(500).json({masssage :"failed to load data "})
+  }
+})
 app.post("/sinner", async (req, res) => {
   const { email, ...otherData } = req.body;
 
