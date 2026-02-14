@@ -382,7 +382,7 @@ app.post("/developer",async (req,res) =>{
 app.get("/developer" , async (req, res ) => {
   try{
     const result = await developerCollection.find().toArray();
-    res.status(200).json(data)
+    res.status(200).json(result)
   }catch(error){
     res.status(500).json({error : "Failed to load data"})
   }
