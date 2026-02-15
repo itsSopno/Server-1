@@ -370,15 +370,16 @@ app.put('/payment/:id', async (req, res) => {
 
 
 // FOR STUDIO SINNERS 
-app.post("/developer",async (req,res) =>{
+app.post("/developer", async (req, res) => {
   const data = req.body;
-  try{
+  try {
     const result = await developerCollection.insertOne(data);
-    res.status(201).json({massage : "developer added "})
-  }catch(error){
-    res.json({massage :"Error"})
+    res.status(201).json({ message: "Developer added successfully", insertedId: result.insertedId });
+  } catch (error) {
+    console.error("Error adding developer:", error);
+    res.status(500).json({ error: "Failed to add developer" });
   }
-})
+});
 app.get("/developer" , async (req, res ) => {
   try{
     const result = await developerCollection.find().toArray();
