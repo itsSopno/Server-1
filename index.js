@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-require('dotenv').config(); 
+require('dotenv').config();
 
 const app = express();
 // Render-এর জন্য পোর্ট প্রসেস এনভায়রনমেন্ট থেকে নেওয়া জরুরি
@@ -22,12 +22,12 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-   
+
     await client.connect();
     console.log("✅ Connected to MongoDB!");
 
     const db = client.db("test");
-    
+
     // Collections
     // FOR Nezin data 
     const menCollection = db.collection("men");
@@ -35,552 +35,581 @@ async function run() {
     const nezinUserCollection = db.collection("Customer");
     const customerCollection = db.collection("CusData");
     const dataCollection = db.collection("payment")
-const femaleCollection = db.collection("female-payment")
-// Ai model data 
+    const femaleCollection = db.collection("female-payment")
+    // Ai model data 
     const usersCollection = db.collection("users");
     const buyerCollection = db.collection("buyerdata");
     const userCollection = db.collection("user");
-// porfolio data 
-  const projectCollection = db.collection("project");
-  // for studio 
-      const itemsCollection = db.collection("items");
-const contactCollection = db.collection("Contact")
-const sinnersCollection = db.collection("sinner")
-const developerCollection = db.collection("developer")
-const clientCollection = db.collection("client")
-const allpostCollection = db.collection("allpost")
-const clientpostCollection =db.collection("clipost")
-const devprojectCollection = db.collection("dpost")
+    // porfolio data 
+    const projectCollection = db.collection("project");
+    const allcollection = db.collection("allcollection")
+    // for studio 
+    const itemsCollection = db.collection("items");
+    const contactCollection = db.collection("Contact")
+    const sinnersCollection = db.collection("sinner")
+    const developerCollection = db.collection("developer")
+    const clientCollection = db.collection("client")
+    const allpostCollection = db.collection("allpost")
+    const clientpostCollection = db.collection("clipost")
+    const devprojectCollection = db.collection("dpost")
 
     // --- Routes ---
 
     app.get('/', (req, res) => {
       res.send('AI Verse Backend is Running 🚀');
     });
-// GET all customers (Nezim)
-app.get("/Customer", async(req , res) =>{
-  try{
-    const customers = await nezinUserCollection.find().toArray();
-    res.status(200).json(customers);
-  }catch(error){
-    res.status(500).json({error : 'Failed to fetch customers'});
-  }
-})
-
-app.post("/Customer", async (req, res) => {
-  const customer = req.body;
-  
-  // Email check korar jonno query
-  const query = { email: customer.email };
-
-  try {
-    // 1. Prothome check korbo ei email diye keu ache kina
-    const existingUser = await nezinUserCollection.findOne(query);
-
-    if (existingUser) {
-      // User thakle amra insert korbo na, shudhu message pathabo
-      return res.status(200).json({ message: "User already exists", insertedId: null });
-    }
-
-    // 2. User na thakle notun kore insert korbo
-    const result = await nezinUserCollection.insertOne(customer);
-    res.status(201).json({ message: "User added successfully", result });
-
-  } catch (error) {
-    console.error("Error adding user:", error);
-    res.status(500).json({ error: "Failed to add user" });
-  }
-});
-// for womenCollectio 
-app.post("/women" , async (req ,res) => {
-  const women = req.body;
-  try{
-    const result = await womenCollection.insertOne(women);
-    res.status(201).json({massage :"Women Outfit Collection"});
-
-  }catch(error){
-    res.status(500).json({error : "Failed to post data"})
-  }
-})
-app.get("/women" , async(req , res) => {
-  try{
-    const women = await womenCollection.find().toArray();
-    res.status(200).json(women);
-  }catch(error){
-    res.status(500).json({error : "Failed to fetch data"})
-  }
-})
-
-app.post("/women/:id/products", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const product = req.body;
-
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ error: "Invalid ID format" });
-    }
-
-    const filter = { _id: new ObjectId(id) };
-    const updateDoc = { $push: { products: product } };
-
-    // Use updateOne instead of insertOne
-    const result = await womenCollection.updateOne(filter, updateDoc);
-
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: "Women category not found" });
-    }
-
-    res.status(201).json({ message: "Product added successfully", result });
-  } catch (error) {
-    console.error(error); // Log the error for debugging
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-app.delete("/women/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-
-    // 1. Validate ID format first to prevent BSON errors
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ error: "Invalid ID format" });
-    }
-
-    const query = { _id: new ObjectId(id) };
-    const result = await womenCollection.deleteOne(query);
-
-    // 2. Changed 'id' to 'if' and corrected 'massage' to 'message'
-    if (result.deletedCount === 1) {
-      res.status(200).json({ message: "Women Data deleted successfully" });
-    } else {
-      // 3. Changed 'erro' to 'error' and used 404 for 'Not Found'
-      res.status(404).json({ error: "No document found with this ID" });
-    }
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to delete data" });
-  }
-});
-// for menCollection
-app.post("/men" , async(req,res) => {
-  const men = req.body;
-  try{
-    const result = await menCollection.insertOne(men);
-    res.status(201).json({massage:"Men Outfit Collection"});
-  
-  }catch(error){
-    res.status(500).json({error :"Failde to post Outfit"})
-  }
-})
-app.get("/men", async(req, res) => {
-  try{
-    const men = await menCollection.find().toArray();
-    res.status(200).json(men);
-  }catch(error){
-    res.status(500).json({error : 'Failed to fetch men outfits'});
-  }
-})
-
-// Add product to men outfit
-app.post('/men/:id/product', async (req, res) => {
-  try {
-    const id = req.params.id;
-    const product = req.body;
-
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'Invalid id' });
-    }
-
-    const filter = { _id: new ObjectId(id) };
-    const updateDoc = { $push: { products: product } };
-    const result = await menCollection.updateOne(filter, updateDoc);
-
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'Men outfit not found' });
-    }
-
-    res.status(201).json({ message: 'Product added successfully', modifiedCount: result.modifiedCount });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to add product' });
-  }
-});
-
-// Get products for a specific men outfit
-app.get('/men/:id/product', async (req, res) => {
-  try {
-    const id = req.params.id;
-
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'Invalid id' });
-    }
-
-    const filter = { _id: new ObjectId(id) };
-    const outfit = await menCollection.findOne(filter);
-
-    if (!outfit) {
-      return res.status(404).json({ error: 'Men outfit not found' });
-    }
-
-    res.status(200).json({ products: outfit.products || [] });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch products' });
-  }
-});
-
-// Update a men outfit by id
-app.put('/men/:id', async (req, res) => {
-  const id = req.params.id;
-  const update = req.body;
-  if (!ObjectId.isValid(id)) {
-    return res.status(400).json({ error: 'Invalid id' });
-  }
-
-  try {
-    const filter = { _id: new ObjectId(id) };
-    const updateDoc = { $set: update };
-    const result = await menCollection.updateOne(filter, updateDoc);
-
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'Men outfit not found' });
-    }
-
-    res.status(200).json({ message: 'Men outfit updated', modifiedCount: result.modifiedCount });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update men outfit' });
-  }
-});
-
-app.delete('/Customer/:id', async (req, res) => {
-  try {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    
-    const result = await nezinUserCollection.deleteOne(query);
-
-    if (result.deletedCount === 1) {
-      res.status(200).json({ message: 'customer successfully deleted' });
-    } else {
-      res.status(404).json({ error: 'No project found with this ID' });
-    }
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to delete the project' });
-  }
-});
-
-app.post("/CusData" , async (req, res) =>{
-  const data = req.body;
-  try{
-    const result = await customerCollection.insertOne(data);
-    res.status(201).json({
-      masssage : "Data uploaded",insterdID : result.insertedId
+    // GET all customers (Nezim)
+    app.get("/Customer", async (req, res) => {
+      try {
+        const customers = await nezinUserCollection.find().toArray();
+        res.status(200).json(customers);
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch customers' });
+      }
     })
-  }catch(error){
-    res.status(500).json({error : "you have problem"});
-  }
-})
-app.get("/CusData", async(req, res) => {
-  try{
-    const result = await customerCollection.find().toArray();
-    res.status(200).json(result);
-  }catch(error){
-    res.status(500).json({error : "Failed to fetch data"})
-  }
-});
-app.get("/user",async(req , res) =>{
-  try{
-    const users = await userCollection.find().toArray();
-    res.status(200).json(users);
-  }catch(error){
-    res.status(500).json({ error: 'Failed to fetch users' }); 
-  }
-})
 
+    app.post("/Customer", async (req, res) => {
+      const customer = req.body;
 
-// POST add new item
+      // Email check korar jonno query
+      const query = { email: customer.email };
 
-app.post("/user",async(req , res)=>{
-  const user = req.body;
-  try{
-    const result = await userCollection.insertOne(user);
-    res.status(201).json({message:"User added successfully", insertedId: result.insertedId});
-  }catch(error){
-    res.status(500).json({error:"Failed to add user"});
-  }
-})
+      try {
+        // 1. Prothome check korbo ei email diye keu ache kina
+        const existingUser = await nezinUserCollection.findOne(query);
 
-// Payment routes
-app.get('/female-payment', async (req, res) => {
-  try {
-    const payments = await femaleCollection.find().toArray();
-    res.status(200).json(payments);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch payments' });
-  }
-});
-app.post('/female-payment', async (req, res) => {
-  const payment = req.body;
-  try {
-    const result = await femaleCollection.insertOne(payment);
-    res.status(201).json({ message: 'Payment created', insertedId: result.insertedId });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create payment' });
-  }
-});
+        if (existingUser) {
+          // User thakle amra insert korbo na, shudhu message pathabo
+          return res.status(200).json({ message: "User already exists", insertedId: null });
+        }
 
-app.get('/payment', async (req, res) => {
-  try {
-    const payments = await dataCollection.find().toArray();
-    res.status(200).json(payments);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch payments' });
-  }
-});
+        // 2. User na thakle notun kore insert korbo
+        const result = await nezinUserCollection.insertOne(customer);
+        res.status(201).json({ message: "User added successfully", result });
 
-app.post('/payment', async (req, res) => {
-  const payment = req.body;
-  try {
-    const result = await dataCollection.insertOne(payment);
-    res.status(201).json({ message: 'Payment created', insertedId: result.insertedId });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create payment' });
-  }
-});
+      } catch (error) {
+        console.error("Error adding user:", error);
+        res.status(500).json({ error: "Failed to add user" });
+      }
+    });
+    // for womenCollectio 
+    app.post("/women", async (req, res) => {
+      const women = req.body;
+      try {
+        const result = await womenCollection.insertOne(women);
+        res.status(201).json({ massage: "Women Outfit Collection" });
 
-app.put('/payment/:id', async (req, res) => {
-  const { id } = req.params;
-  const update = req.body;
-  if (!ObjectId.isValid(id)) {
-    return res.status(400).json({ error: 'Invalid id' });
-  }
+      } catch (error) {
+        res.status(500).json({ error: "Failed to post data" })
+      }
+    })
+    app.get("/women", async (req, res) => {
+      try {
+        const women = await womenCollection.find().toArray();
+        res.status(200).json(women);
+      } catch (error) {
+        res.status(500).json({ error: "Failed to fetch data" })
+      }
+    })
 
-  try {
-    const filter = { _id: new ObjectId(id) };
-    const updateDoc = { $set: update };
-    const result = await dataCollection.updateOne(filter, updateDoc);
+    app.post("/women/:id/products", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const product = req.body;
 
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'Payment not found' });
-    }
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ error: "Invalid ID format" });
+        }
 
-    res.status(200).json({ message: 'Payment updated', modifiedCount: result.modifiedCount });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update payment' });
-  }
-});
-// END OF NEZIN 
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = { $push: { products: product } };
 
+        // Use updateOne instead of insertOne
+        const result = await womenCollection.updateOne(filter, updateDoc);
 
-// FOR STUDIO SINNERS 
-app.post("/developer", async (req, res) => {
-  const data = req.body;
-  try {
-    const result = await developerCollection.insertOne(data);
-    res.status(201).json({ message: "Developer added successfully", insertedId: result.insertedId });
-  } catch (error) {
-    console.error("Error adding developer:", error);
-    res.status(500).json({ error: "Failed to add developer" });
-  }
-});
-app.get("/developer" , async (req, res ) => {
-  try{
-    const result = await developerCollection.find().toArray();
-    res.status(200).json(result)
-  }catch(error){
-    res.status(500).json({error : "Failed to load data"})
-  }
-})
-app.post("/client" , async (req , res ) =>{
-  const result = req.body;
-  try{
-    const data = await clientCollection.insertOne(result);
-    res.status(201).json({massage :"data added"})
-  }catch(error){
-    res.status(500).json({massage :"error"})
-  }
-})
-app.get("/client",async (req , res ) => {
-  try{
-    const data = await clientCollection.find().toArray();
-    res.status(200).json(data)
-  }catch(error){
-    res.status(500).json({massasge :" Failed to load data "})
-  }
-})
-app.post("/allpost" , async(req , res ) => {
-  const data = req.body;
-  try{
-    const result  = await allpostCollection.insertOne(data);
-    res.status(201).json({massage :"all post added"})
-  }catch(error){
-    res.status(500).json({masssage :"Failed to add post "})
-  }
-})
-app.get("/allpost" , async (req , res ) => {
-  try{
-    const result = await allpostCollection.find().toArray();
-    res.status(200).json({massage : "post founded"})
-  }catch(error){
-    res.status(500).json({masssage :"failed to load data "})
-  }
-})
-app.post("/sinner", async (req, res) => {
-  const { email, ...otherData } = req.body;
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ error: "Women category not found" });
+        }
 
-  try {
-    
-    const existingUser = await sinnersCollection.findOne({ email: email });
+        res.status(201).json({ message: "Product added successfully", result });
+      } catch (error) {
+        console.error(error); // Log the error for debugging
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+    app.delete("/women/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
 
-    if (existingUser) {
-      
-      return res.status(200).json({ 
-        message: "User already exists", 
-        role: existingUser.role || "user" 
-      });
-    }
+        // 1. Validate ID format first to prevent BSON errors
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ error: "Invalid ID format" });
+        }
 
-   
-    const result = await sinnersCollection.insertOne({ 
-      email, 
-      ...otherData, 
-      createdAt: new Date() 
+        const query = { _id: new ObjectId(id) };
+        const result = await womenCollection.deleteOne(query);
+
+        // 2. Changed 'id' to 'if' and corrected 'massage' to 'message'
+        if (result.deletedCount === 1) {
+          res.status(200).json({ message: "Women Data deleted successfully" });
+        } else {
+          // 3. Changed 'erro' to 'error' and used 404 for 'Not Found'
+          res.status(404).json({ error: "No document found with this ID" });
+        }
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to delete data" });
+      }
+    });
+    // for menCollection
+    app.post("/men", async (req, res) => {
+      const men = req.body;
+      try {
+        const result = await menCollection.insertOne(men);
+        res.status(201).json({ massage: "Men Outfit Collection" });
+
+      } catch (error) {
+        res.status(500).json({ error: "Failde to post Outfit" })
+      }
+    })
+    app.get("/men", async (req, res) => {
+      try {
+        const men = await menCollection.find().toArray();
+        res.status(200).json(men);
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch men outfits' });
+      }
+    })
+
+    // Add product to men outfit
+    app.post('/men/:id/product', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const product = req.body;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ error: 'Invalid id' });
+        }
+
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = { $push: { products: product } };
+        const result = await menCollection.updateOne(filter, updateDoc);
+
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ error: 'Men outfit not found' });
+        }
+
+        res.status(201).json({ message: 'Product added successfully', modifiedCount: result.modifiedCount });
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to add product' });
+      }
     });
 
- 
-    res.status(201).json({ 
-      message: "User added successfully", 
-      role: "user" 
+    // Get products for a specific men outfit
+    app.get('/men/:id/product', async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ error: 'Invalid id' });
+        }
+
+        const filter = { _id: new ObjectId(id) };
+        const outfit = await menCollection.findOne(filter);
+
+        if (!outfit) {
+          return res.status(404).json({ error: 'Men outfit not found' });
+        }
+
+        res.status(200).json({ products: outfit.products || [] });
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch products' });
+      }
     });
 
-  } catch (error) {
-    console.error("Database Error:", error);
-    res.status(500).json({ error: "Failed to post user data" });
-  }
-});
-app.get("/sinner" , async(req , res ) =>{
-  try{
-    const sinner = await sinnersCollection.find().toArray();
-    res.status(200).json(sinner)
-  }catch(error){
-    res.status(500).json({masssage : "failed found user "})
-  }
-})
-app.post("/contact" , async (req , res ) => {
-  const data = req.body; 
-try{
-  const result = await contactCollection.insertOne(data);
-  res.status(201).json({massage: "contact data added "})
-}catch(error){
-  res.json({massage : "error"})
-}})
+    // Update a men outfit by id
+    app.put('/men/:id', async (req, res) => {
+      const id = req.params.id;
+      const update = req.body;
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ error: 'Invalid id' });
+      }
 
-app.get("/contact" , async (req , res ) => {
-  try{
-    const data = await contactCollection.find().toArray();
-    res.status(200).json(data);
-  }catch(error){
-    res.status(500).json({error : "Failed to load data "})
-  }
-})
-app.get('/items', async (req, res) => {
-  try {
-    const items = await itemsCollection.find().toArray();
-    res.status(200).json(items);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch items' });
-  }
-});
-// GET single item
-app.get('/items/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
+      try {
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = { $set: update };
+        const result = await menCollection.updateOne(filter, updateDoc);
 
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'Invalid item ID' });
-    }
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ error: 'Men outfit not found' });
+        }
 
-    const item = await itemsCollection.findOne({ _id: new ObjectId(id) });
-
-    if (!item) {
-      return res.status(404).json({ error: 'Item not found' });
-    }
-
-    res.status(200).json(item);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch item' });
-  }
-});
-app.post("/items", async (req, res) => {
-  const items = req.body; // তোমার array of objects
-
-  try {
-    if (!Array.isArray(items)) {
-      return res.status(400).json({ error: "Expected an array of items" });
-    }
-
-    const result = await itemsCollection.insertMany(items);
-
-    res.status(201).json({
-      message: "Items created successfully",
-      insertedCount: result.insertedCount,
-      insertedIds: result.insertedIds,
+        res.status(200).json({ message: 'Men outfit updated', modifiedCount: result.modifiedCount });
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to update men outfit' });
+      }
     });
-  } catch (err) {
-    console.error("Insert Error:", err);
-    res.status(500).json({ error: "Failed to save items" });
-  }
-});
 
+    app.delete('/Customer/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
 
-// PUT update item
-app.put('/items/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
+        const result = await nezinUserCollection.deleteOne(query);
 
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'Invalid item ID' });
-    }
-
-    const updatedData = req.body;
-
-    const result = await itemsCollection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: updatedData }
-    );
-
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'Item not found' });
-    }
-
-    res.status(200).json({
-      message: 'Item updated successfully',
-      modifiedCount: result.modifiedCount
+        if (result.deletedCount === 1) {
+          res.status(200).json({ message: 'customer successfully deleted' });
+        } else {
+          res.status(404).json({ error: 'No project found with this ID' });
+        }
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to delete the project' });
+      }
     });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update item' });
-  }
-});
-// END OF STUDIO 
-                           // FOR PORTFOLIO 
-app.put('/project/:id',async(req, res)=>{
-  try{
-    const {id} = req.params;
-    if(!ObjectId.isValid(id))
-{
-  return res.status(400).json({error:"Invalid project ID"});
-}
-const updatedData = req.body;
-const result = await projectCollection.updateOne(
-  {_id: new ObjectId(id)},
-  {$set: updatedData}
-);
-if(result.matchedCount ===0){
-  return res.status(404).json({error:"Project not found"});
-}res.status(200).json({  message:"Project updated successfully",
-  modifiedCount: result.modifiedCount})
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to update project' });
-  }
 
-})    // Projects GET
+    app.post("/CusData", async (req, res) => {
+      const data = req.body;
+      try {
+        const result = await customerCollection.insertOne(data);
+        res.status(201).json({
+          masssage: "Data uploaded", insterdID: result.insertedId
+        })
+      } catch (error) {
+        res.status(500).json({ error: "you have problem" });
+      }
+    })
+    app.get("/CusData", async (req, res) => {
+      try {
+        const result = await customerCollection.find().toArray();
+        res.status(200).json(result);
+      } catch (error) {
+        res.status(500).json({ error: "Failed to fetch data" })
+      }
+    });
+    app.get("/user", async (req, res) => {
+      try {
+        const users = await userCollection.find().toArray();
+        res.status(200).json(users);
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch users' });
+      }
+    })
+
+
+    // POST add new item
+
+    app.post("/user", async (req, res) => {
+      const user = req.body;
+      try {
+        const result = await userCollection.insertOne(user);
+        res.status(201).json({ message: "User added successfully", insertedId: result.insertedId });
+      } catch (error) {
+        res.status(500).json({ error: "Failed to add user" });
+      }
+    })
+
+    // Payment routes
+    app.get('/female-payment', async (req, res) => {
+      try {
+        const payments = await femaleCollection.find().toArray();
+        res.status(200).json(payments);
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch payments' });
+      }
+    });
+    app.post('/female-payment', async (req, res) => {
+      const payment = req.body;
+      try {
+        const result = await femaleCollection.insertOne(payment);
+        res.status(201).json({ message: 'Payment created', insertedId: result.insertedId });
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to create payment' });
+      }
+    });
+
+    app.get('/payment', async (req, res) => {
+      try {
+        const payments = await dataCollection.find().toArray();
+        res.status(200).json(payments);
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch payments' });
+      }
+    });
+
+    app.post('/payment', async (req, res) => {
+      const payment = req.body;
+      try {
+        const result = await dataCollection.insertOne(payment);
+        res.status(201).json({ message: 'Payment created', insertedId: result.insertedId });
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to create payment' });
+      }
+    });
+
+    app.put('/payment/:id', async (req, res) => {
+      const { id } = req.params;
+      const update = req.body;
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ error: 'Invalid id' });
+      }
+
+      try {
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = { $set: update };
+        const result = await dataCollection.updateOne(filter, updateDoc);
+
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ error: 'Payment not found' });
+        }
+
+        res.status(200).json({ message: 'Payment updated', modifiedCount: result.modifiedCount });
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to update payment' });
+      }
+    });
+    // END OF NEZIN 
+
+
+    // FOR STUDIO SINNERS 
+    app.post("/developer", async (req, res) => {
+      const data = req.body;
+      try {
+        const result = await developerCollection.insertOne(data);
+        res.status(201).json({ message: "Developer added successfully", insertedId: result.insertedId });
+      } catch (error) {
+        console.error("Error adding developer:", error);
+        res.status(500).json({ error: "Failed to add developer" });
+      }
+    });
+    app.get("/developer", async (req, res) => {
+      try {
+        const result = await developerCollection.find().toArray();
+        res.status(200).json(result)
+      } catch (error) {
+        res.status(500).json({ error: "Failed to load data" })
+      }
+    })
+    app.post("/client", async (req, res) => {
+      const result = req.body;
+      try {
+        const data = await clientCollection.insertOne(result);
+        res.status(201).json({ massage: "data added" })
+      } catch (error) {
+        res.status(500).json({ massage: "error" })
+      }
+    })
+    app.get("/client", async (req, res) => {
+      try {
+        const data = await clientCollection.find().toArray();
+        res.status(200).json(data)
+      } catch (error) {
+        res.status(500).json({ massasge: " Failed to load data " })
+      }
+    })
+    app.post("/allpost", async (req, res) => {
+      const data = req.body;
+      try {
+        const result = await allpostCollection.insertOne(data);
+        res.status(201).json({ massage: "all post added" })
+      } catch (error) {
+        res.status(500).json({ masssage: "Failed to add post " })
+      }
+    })
+    app.get("/allpost", async (req, res) => {
+      try {
+        const result = await allpostCollection.find().toArray();
+        res.status(200).json({ massage: "post founded" })
+      } catch (error) {
+        res.status(500).json({ masssage: "failed to load data " })
+      }
+    })
+    app.post("/sinner", async (req, res) => {
+      const { email, ...otherData } = req.body;
+
+      try {
+
+        const existingUser = await sinnersCollection.findOne({ email: email });
+
+        if (existingUser) {
+
+          return res.status(200).json({
+            message: "User already exists",
+            role: existingUser.role || "user"
+          });
+        }
+
+
+        const result = await sinnersCollection.insertOne({
+          email,
+          ...otherData,
+          createdAt: new Date()
+        });
+
+
+        res.status(201).json({
+          message: "User added successfully",
+          role: "user"
+        });
+
+      } catch (error) {
+        console.error("Database Error:", error);
+        res.status(500).json({ error: "Failed to post user data" });
+      }
+    });
+    app.get("/sinner", async (req, res) => {
+      try {
+        const sinner = await sinnersCollection.find().toArray();
+        res.status(200).json(sinner)
+      } catch (error) {
+        res.status(500).json({ masssage: "failed found user " })
+      }
+    })
+    app.post("/contact", async (req, res) => {
+      const data = req.body;
+      try {
+        const result = await contactCollection.insertOne(data);
+        res.status(201).json({ massage: "contact data added " })
+      } catch (error) {
+        res.json({ massage: "error" })
+      }
+    })
+
+    app.get("/contact", async (req, res) => {
+      try {
+        const data = await contactCollection.find().toArray();
+        res.status(200).json(data);
+      } catch (error) {
+        res.status(500).json({ error: "Failed to load data " })
+      }
+    })
+    app.get('/items', async (req, res) => {
+      try {
+        const items = await itemsCollection.find().toArray();
+        res.status(200).json(items);
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch items' });
+      }
+    });
+    // GET single item
+    app.get('/items/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ error: 'Invalid item ID' });
+        }
+
+        const item = await itemsCollection.findOne({ _id: new ObjectId(id) });
+
+        if (!item) {
+          return res.status(404).json({ error: 'Item not found' });
+        }
+
+        res.status(200).json(item);
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch item' });
+      }
+    });
+    app.post("/items", async (req, res) => {
+      const items = req.body; // তোমার array of objects
+
+      try {
+        if (!Array.isArray(items)) {
+          return res.status(400).json({ error: "Expected an array of items" });
+        }
+
+        const result = await itemsCollection.insertMany(items);
+
+        res.status(201).json({
+          message: "Items created successfully",
+          insertedCount: result.insertedCount,
+          insertedIds: result.insertedIds,
+        });
+      } catch (err) {
+        console.error("Insert Error:", err);
+        res.status(500).json({ error: "Failed to save items" });
+      }
+    });
+
+
+    // PUT update item
+    app.put('/items/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ error: 'Invalid item ID' });
+        }
+
+        const updatedData = req.body;
+
+        const result = await itemsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updatedData }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ error: 'Item not found' });
+        }
+
+        res.status(200).json({
+          message: 'Item updated successfully',
+          modifiedCount: result.modifiedCount
+        });
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to update item' });
+      }
+    });
+    // END OF STUDIO 
+    // FOR PORTFOLIO 
+
+    app.post("/allcollection", async (req, res) => {
+      const body = req.body;
+      try {
+        const result = await allcollection.insertOne(body);
+        res.status(201).json({ massage: "data added" })
+
+      } catch (err) {
+        res.status(500).json({ massage: "failed to add data " })
+      }
+    })
+    app.get("/allcollection/:id", async (req, res) => {
+      try {
+        const { id } = req.params.id;
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ error: " id is not valid" })
+        }
+        const result = await allcollection.findOne({ _id: new ObjectId(id) });
+        if (result.matchedCount === 0) {
+          return res.status(400).json({ error: " no data found" })
+        }
+        res.status(200).json({ message: "data found" })
+      } catch (error) {
+        res.status(500).json({ error: "failed to load data " })
+      }
+    })
+    app.put('/project/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ error: "Invalid project ID" });
+        }
+        const updatedData = req.body;
+        const result = await projectCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updatedData }
+        );
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ error: "Project not found" });
+        } res.status(200).json({
+          message: "Project updated successfully",
+          modifiedCount: result.modifiedCount
+        })
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to update project' });
+      }
+
+    })    // Projects GET
     app.get('/project', async (req, res) => {
       try {
         const projects = await projectCollection.find().toArray();
@@ -590,69 +619,69 @@ if(result.matchedCount ===0){
       }
     });
     // Import ObjectId at the top of your file if you haven't already
-// const { ObjectId } = require('mongodb');
-app.delete('/project/:id', async (req, res) => {
-  try {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    
-    const result = await projectCollection.deleteOne(query);
+    // const { ObjectId } = require('mongodb');
+    app.delete('/project/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
 
-    if (result.deletedCount === 1) {
-      res.status(200).json({ message: 'Project successfully deleted' });
-    } else {
-      res.status(404).json({ error: 'No project found with this ID' });
-    }
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to delete the project' });
-  }
-});
-   app.patch('/project/:id', async (req, res) => {
-  try {
-    const id = req.params.id;
-    const updateDoc = req.body; 
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'Invalid Project ID format' });
-    }
+        const result = await projectCollection.deleteOne(query);
 
-    const filter = { _id: new ObjectId(id) };
-    
-    const result = await projectCollection.updateOne(
-      filter, 
-      { $set: updateDoc }
-    );
-
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'No project found with this ID' });
-    }
-
-    res.status(200).json({
-      message: 'Update successful',
-      modifiedCount: result.modifiedCount
+        if (result.deletedCount === 1) {
+          res.status(200).json({ message: 'Project successfully deleted' });
+        } else {
+          res.status(404).json({ error: 'No project found with this ID' });
+        }
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to delete the project' });
+      }
     });
+    app.patch('/project/:id', async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updateDoc = req.body;
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ error: 'Invalid Project ID format' });
+        }
 
-  } catch (err) {
-    console.error('Update Error:', err);
-    res.status(500).json({ error: 'Internal server error during update' });
-  }
-});
-// Projects POST
-app.post('/project', async (req, res) => {
-  try {
-    const newProject = req.body; 
+        const filter = { _id: new ObjectId(id) };
 
-    const result = await projectCollection.insertOne(newProject);
-    
-    res.status(201).json({
-      message: 'Project created successfully',
-      insertedId: result.insertedId,
-      project: newProject
+        const result = await projectCollection.updateOne(
+          filter,
+          { $set: updateDoc }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ error: 'No project found with this ID' });
+        }
+
+        res.status(200).json({
+          message: 'Update successful',
+          modifiedCount: result.modifiedCount
+        });
+
+      } catch (err) {
+        console.error('Update Error:', err);
+        res.status(500).json({ error: 'Internal server error during update' });
+      }
     });
-  } catch (err) {
-    console.error('Error inserting project:', err);
-    res.status(500).json({ error: 'Failed to save project data' });
-  }
-});
+    // Projects POST
+    app.post('/project', async (req, res) => {
+      try {
+        const newProject = req.body;
+
+        const result = await projectCollection.insertOne(newProject);
+
+        res.status(201).json({
+          message: 'Project created successfully',
+          insertedId: result.insertedId,
+          project: newProject
+        });
+      } catch (err) {
+        console.error('Error inserting project:', err);
+        res.status(500).json({ error: 'Failed to save project data' });
+      }
+    });
     // Single Project GET
     app.get('/project/:id', async (req, res) => {
       try {
@@ -665,7 +694,7 @@ app.post('/project', async (req, res) => {
       }
     });
     // end of portfolio 
-                                      //  Ai model data 
+    //  Ai model data 
     // Add Model POST
     app.post('/users', async (req, res) => {
       try {
@@ -677,21 +706,21 @@ app.post('/project', async (req, res) => {
       }
     });
     app.get('/users', async (req, res) => {
-  try{
-    const users = await usersCollection.find().toArray();
-    res.status(200).json(users);
-  }catch(error){
-    res.status(500).json({ error: 'Failed to fetch users' }); 
-  }
-})
-app.get('/buyerdata', async (req, res) => {
-  try {
-    const buyers = await buyerCollection.find().toArray();
-    res.status(200).json(buyers);
-  }catch(error){
-    res.status(500).json({ error: 'Failed to fetch buyers' });
-  }
-})
+      try {
+        const users = await usersCollection.find().toArray();
+        res.status(200).json(users);
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch users' });
+      }
+    })
+    app.get('/buyerdata', async (req, res) => {
+      try {
+        const buyers = await buyerCollection.find().toArray();
+        res.status(200).json(buyers);
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch buyers' });
+      }
+    })
     app.post('/users/:id/purchase', async (req, res) => {
       const { id } = req.params;
       try {
@@ -713,11 +742,11 @@ app.get('/buyerdata', async (req, res) => {
         const buyerInfo = req.body;
         const { modelName, buyerEmail } = buyerInfo;
         const haveUser = await buyerCollection.findOne({ modelName, buyerEmail });
-        
+
         if (haveUser) {
           return res.status(400).json({ error: 'User already purchased this model' });
         }
-        
+
         const result = await buyerCollection.insertOne({
           ...buyerInfo,
           purchasedAt: new Date(),
