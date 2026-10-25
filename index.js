@@ -17,13 +17,22 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
+  // Timeout & retry options so the server doesn't hard-crash on network blips
+  serverSelectionTimeoutMS: 30000,  // 30s to find a server before failing
+  connectTimeoutMS: 15000,          // 15s per connection attempt
+  socketTimeoutMS: 45000,           // 45s for socket inactivity
+  retryWrites: true,
+  maxPoolSize: 10,
 });
+
+let connected = false;
 
 async function run() {
   try {
 
     await client.connect();
+    connected = true;
     console.log("✅ Connected to MongoDB!");
 
     const db = client.db("test");
@@ -760,11 +769,25 @@ async function run() {
     // ... অন্য সব রুটগুলো আগের মতোই থাকবে ...
 
   } catch (err) {
-    console.error("MongoDB error:", err);
+    connected = false;
+    console.error("MongoDB connection failed:", err.message);
+
+    // Background retry — try reconnecting every 10s so the app self-heals
+    const retry = async () => {
+      try {
+        await client.connect();
+        connected = true;
+        console.log("✅ Reconnected to MongoDB!");
+      } catch (e) {
+        console.error("Reconnect failed, retrying in 10s...");
+        setTimeout(retry, 10000);
+      }
+    };
+    setTimeout(retry, 10000);
   }
 }
 
-run().catch(console.dir);
+run().catch((err) => console.error("Startup error:", err.message));
 
 // সার্ভার লিসেনিং 'run' ফাংশনের বাইরে রাখা নিরাপদ
 app.listen(port, () => {
